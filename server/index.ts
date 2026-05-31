@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import nodemailer from "nodemailer";
+import { answerPortfolioQuestion } from "../src/lib/portfolioKnowledge.ts";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -28,6 +29,21 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     mailConfigured: Boolean(SMTP_USER && SMTP_PASS && CONTACT_TO_EMAIL),
   });
+});
+
+app.post("/api/chat", (req, res) => {
+  const { message } = req.body ?? {};
+  const trimmed = String(message ?? "").trim();
+
+  if (!trimmed) {
+    return res.status(400).json({ error: "Message is required." });
+  }
+
+  if (trimmed.length > 400) {
+    return res.status(400).json({ error: "Message must be 400 characters or fewer." });
+  }
+
+  return res.json({ reply: answerPortfolioQuestion(trimmed) });
 });
 
 app.post("/api/contact", async (req, res) => {

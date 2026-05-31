@@ -47,12 +47,45 @@ export interface Experience {
 
 export interface BlogPost {
   id: string;
+  projectId: string;
   category: string;
   date: string;
   title: string;
   summary: string;
-  content: string;
+  problem: string;
+  solution: string;
+  learning: string;
   readTime: string;
+  icon: string;
+  imageUrl: string;
+  stack: string;
+  liveUrl: string;
+  githubUrl: string;
+  highlights: string[];
+}
+
+function insightFromProject(
+  projectId: string,
+  fields: Omit<
+    BlogPost,
+    "id" | "projectId" | "icon" | "imageUrl" | "stack" | "liveUrl" | "githubUrl" | "highlights"
+  >
+): BlogPost {
+  const project = PROJECTS.find((p) => p.id === projectId);
+  if (!project) {
+    throw new Error(`Project not found for insight: ${projectId}`);
+  }
+  return {
+    id: `insight-${projectId}`,
+    projectId,
+    icon: project.icon,
+    imageUrl: project.imageUrl,
+    stack: project.language,
+    liveUrl: project.liveUrl,
+    githubUrl: project.githubUrl,
+    highlights: project.architecture,
+    ...fields,
+  };
 }
 
 export const INITIAL_PROFILE: Profile = {
@@ -67,7 +100,7 @@ export const INITIAL_PROFILE: Profile = {
   twitterUrl: "https://twitter.com/",
   email: "myatkaungkhant022@gmail.com",
   yearsExperience: 2,
-  completedProjects: 7,
+  completedProjects: 8,
   happyClients: 8,
 };
 
@@ -99,6 +132,21 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
 ];
 
 export const PROJECTS: Project[] = [
+  {
+    id: "edutrack",
+    title: "EduTrack",
+    category: "web",
+    language: "React · TypeScript · Tailwind · Faculty Portal",
+    description:
+      "Academic attendance platform with dual teacher and student portals—KPI dashboards, course attendance rates, color-coded check-ins, ledgers, and CSV export.",
+    fullDetails:
+      "EduTrack gives faculty a command center for classes, rosters, bulk enrollment, and reports while students self check-in and track progress. Deployed on Google Cloud Run with seeded demo data for instant review.",
+    icon: "🎓",
+    imageUrl: "/projects/edutrack.png",
+    liveUrl: "https://edutrack-668971334330.europe-west2.run.app/",
+    githubUrl: "https://github.com/mkkbun/EduTrack",
+    architecture: ["Dual Teacher & Student Portals", "Live Attendance KPI Dashboard", "Course Rate Analytics", "CSV Export & Bulk Enroll"],
+  },
   {
     id: "envault-cli",
     title: "Envault CLI",
@@ -236,32 +284,62 @@ export const EXPERIENCES: Experience[] = [
   },
 ];
 
+/** Featured case studies — 4 selected projects (not the full PROJECTS grid) */
 export const BLOG_POSTS: BlogPost[] = [
-  {
-    id: "post-ts",
-    category: "TypeScript",
-    date: "May 24, 2026",
-    title: "Level Up Your Type Guard Defenses in Modern React",
-    summary: "Discover how smart narrowing, discriminating unions, and automated schema checks can make your client-side states bulletproof against edge cases.",
-    content: "When developing complex single-page apps, runtime state bugs often slip through default typing setups. Leveraging discriminant custom properties allows React hooks to conditionally map states perfectly, preventing unexpected renders and missing dependencies.",
-    readTime: "4 min read",
-  },
-  {
-    id: "post-flutter",
-    category: "Flutter Engine",
-    date: "April 12, 2026",
-    title: "Optimizing Canvas Draws & Frame Rates in Dart Profiles",
-    summary: "Unlock 120 FPS on premium devices by identifying redraw spikes, managing state scopes, and profiling heavy GPU threads.",
-    content: "Flutter paints interfaces with absolute pixel-precision. However, wrapping massive widget arrays inside a single parent build function triggers expensive re-layous. By isolating updates using small, local states, we achieve buttery-smooth 120Hz frame rates easily.",
-    readTime: "6 min read",
-  },
-  {
-    id: "post-db",
-    category: "Databases",
-    date: "March 15, 2026",
-    title: "Why Prisma + Prepared Indexes Beat Standard SQL Queries",
-    summary: "A breakdown of query-compiling routines, index scans, and connection pools, proving that a smart ORM is faster than manually written ad-hoc statements.",
-    content: "Developers sometimes fear that abstract layers introduce operational lags. In reality, modern execution engines cache statements perfectly. When coupled with database indexing configured using Prisma schemas, transaction times outperform hand-crafted raw scripts.",
+  insightFromProject("edutrack", {
+    category: "Case Study · Full Stack",
+    date: "Featured · 2026",
+    title: "Building EduTrack: From Attendance Logs to a Faculty Command Center",
+    summary:
+      "Dual teacher/student portals with live KPIs, per-course attendance bars, and a color-coded check-in feed—deployed on Google Cloud Run.",
+    problem:
+      "Teachers often rely on spreadsheets for attendance and trends. There is no single place to monitor classes, today’s check-ins, and course-level presence rates.",
+    solution:
+      "I built EduTrack with an overview dashboard, attendance ledger, bulk CSV enrollment, reports & trends, and a student desk for self check-in. Demo accounts let reviewers explore every flow in minutes.",
+    learning:
+      "Designing role-based navigation for two audiences, keeping KPI cards scannable, and shipping a polished UI with seeded data so the product feels real on first visit.",
     readTime: "5 min read",
-  },
+  }),
+  insightFromProject("job-board-api", {
+    category: "Case Study · Backend",
+    date: "Featured · 2026",
+    title: "Job Board API: Fastify, Prisma, and a Production-Style Dev Console",
+    summary:
+      "An enterprise-style backend workspace with OpenAPI testing, Postgres explorer, BullMQ queues, and Redis rate limiting in one UI.",
+    problem:
+      "Backend portfolios often stop at a README. Recruiters cannot see how auth, queues, or rate limits behave without running everything locally.",
+    solution:
+      "I created an interactive console: Swagger sandbox with JWT role emulator, PostgreSQL explorer, BullMQ monitor, Jest testing tab, and sliding-window Redis rate limiter—wired to a modular Fastify + Prisma API.",
+    learning:
+      "Splitting routes by domain, documenting APIs with OpenAPI, and presenting backend systems through a UI that tells a clear engineering story.",
+    readTime: "6 min read",
+  }),
+  insightFromProject("envault-cli", {
+    category: "Case Study · DevTools",
+    date: "Featured · 2026",
+    title: "Envault: Encrypting Secrets Without Slowing Developers Down",
+    summary:
+      "A CLI and studio for AES-256-GCM vaults, dev/staging/prod profiles, and native OS keychain integration.",
+    problem:
+      "Plain `.env` files are easy to leak. Teams still need fast workflows across environments without committing secrets to git.",
+    solution:
+      "Envault combines a terminal CLI (`init`, `add`, `list`, `export`) with a visual vault UI, PBKDF2-derived keys, encrypted registry entries, and macOS Keychain / Linux Secret Service fallback.",
+    learning:
+      "Balancing security (AES-256-GCM, key derivation) with developer experience—short commands, clear profiles, and a dashboard for non-CLI users.",
+    readTime: "4 min read",
+  }),
+  insightFromProject("collaboration-workspace", {
+    category: "Case Study · Real-Time",
+    date: "Featured · 2026",
+    title: "Synapse: Kanban Boards That Stay in Sync",
+    summary:
+      "Real-time collaboration with Socket.io rooms, Kanban columns, labeled work cards, and teammate invites.",
+    problem:
+      "Remote teams need shared boards that update instantly—not refresh-to-see-what-changed workflows.",
+    solution:
+      "Synapse Workspace ships Kanban from To Do through Shipped, searchable cards, label tags, invite-by-email, and a live “Collaboration Synced OK” status powered by Socket.io room sync.",
+    learning:
+      "Room-based events, optimistic UI updates, and structuring real-time features so the board stays readable under concurrent edits.",
+    readTime: "5 min read",
+  }),
 ];

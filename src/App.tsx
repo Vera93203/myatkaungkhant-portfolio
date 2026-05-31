@@ -35,9 +35,10 @@ import {
   RotateCcw,
   Lock,
   Sun,
-  Moon
+  Moon,
 } from "lucide-react";
 import { useTheme } from "./hooks/useTheme";
+import PortfolioChat from "./components/PortfolioChat";
 import { 
   INITIAL_PROFILE, 
   SKILL_CATEGORIES, 
@@ -45,9 +46,11 @@ import {
   EXPERIENCES, 
   BLOG_POSTS,
   Profile,
-  Project
+  Project,
+  BlogPost,
 } from "./types";
 import Interactive3DCanvas from "./components/Interactive3DCanvas";
+import GlassScrollRail from "./components/GlassScrollRail";
 import { sendContactMessage } from "./lib/contact";
 
 // Interactive 3D Card Wrapper using Mouse Coordinates
@@ -250,6 +253,9 @@ export default function App() {
   // Spotlight Skills Detail
   const [selectedSkill, setSelectedSkill] = useState<{name: string, exp: string} | null>(null);
 
+  // Insights popup (project case study)
+  const [selectedInsight, setSelectedInsight] = useState<BlogPost | null>(null);
+
   // Contact States
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -327,6 +333,19 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, [charIndex, isDeleting, wordIndex, typewriterTerms]);
+
+  useEffect(() => {
+    if (!selectedInsight) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedInsight(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedInsight]);
 
   // Simulated project compiler terminal
   const startTerminalSimulator = (proj: Project) => {
@@ -488,6 +507,8 @@ export default function App() {
         
         <div className="absolute inset-0 app-grid" />
       </div>
+
+      <PortfolioChat accentTextClass={preset.textColor} btnClass={preset.btnClass} />
 
       {/* Profile Live Builder / Dynamic Accent panel */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -660,10 +681,10 @@ export default function App() {
 
           {/* Nav Items — centered column */}
           <ul className="hidden md:flex items-center justify-center gap-8 text-xs uppercase tracking-[0.2em] font-medium text-app-muted">
-            {["skills", "projects", "experience", "blog"].map((sec) => (
+            {["skills", "projects", "experience", "insights"].map((sec) => (
               <li key={sec}>
                 <a
-                  href={`#${sec}`}
+                  href={`#${sec === "insights" ? "blog" : sec}`}
                   onMouseEnter={() => setIsHovered(true)}
                   onMouseLeave={() => setIsHovered(false)}
                   className="hover:text-app-heading transition-colors"
@@ -973,7 +994,7 @@ export default function App() {
                 Selected Work
               </h2>
               <p className="text-xs text-app-muted font-mono max-w-md">
-                Seven full-stack builds — live demos, open source, and production-style UIs.
+                Eight full-stack builds — live demos, open source, and production-style UIs.
               </p>
             </div>
 
@@ -1000,8 +1021,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Grid layout of Projects */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+          {/* Horizontal scroll layout of Projects */}
+          <GlassScrollRail presetId={preset.id}>
             <AnimatePresence mode="popLayout">
               {filteredProjects.map((p, index) => (
                 <motion.div
@@ -1011,7 +1032,7 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.35, delay: index * 0.05 }}
-                  className="h-full"
+                  className="h-full horizontal-scroll-card"
                 >
                   <TiltCard className="h-full project-card">
                     <article className="glass-panel border-app hover:border-app-strong h-full rounded-2xl overflow-hidden shadow-lg flex flex-col group">
@@ -1031,7 +1052,7 @@ export default function App() {
                         </div>
                         <div className="absolute top-3 right-3 z-10">
                           <span className="text-[9px] font-mono bg-app-overlay/80 backdrop-blur-md border border-app text-app-muted px-2 py-0.5 rounded-md uppercase tracking-wider">
-                            0{(index % 7) + 1}
+                            {String(index + 1).padStart(2, "0")}
                           </span>
                         </div>
                       </div>
@@ -1086,7 +1107,7 @@ export default function App() {
                 </motion.div>
               ))}
             </AnimatePresence>
-          </div>
+          </GlassScrollRail>
 
           {/* Interactive Live API terminal logger */}
           <AnimatePresence>
@@ -1239,49 +1260,195 @@ export default function App() {
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-app-heading uppercase font-mono">
               Insights & Diagnostics
             </h2>
+            <p className="text-xs text-app-muted font-mono max-w-xl">
+              Featured case studies on four shipped builds—problem, approach, and lessons learned. All {PROJECTS.length} projects live in Selected Work above.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <GlassScrollRail presetId={preset.id} scrollStep={420}>
             {BLOG_POSTS.map((post) => (
-              <TiltCard key={post.id} className="h-full">
-                <div className={`glass-panel border-app hover:border-${preset.id === "cyan" ? "sky" : preset.id === "violet" ? "purple" : preset.id === "emerald" ? "emerald" : "amber"}-500/20 h-full rounded-2xl p-5 flex flex-col justify-between group`}>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-[9px] font-mono text-app-subtle">
-                      <span className={`${preset.textColor} ${preset.bgSoft} px-2 py-0.5 border ${preset.borderSoft} rounded-md uppercase tracking-wider`}>{post.category}</span>
+              <TiltCard key={post.id} className="h-full horizontal-scroll-card horizontal-scroll-card--wide">
+                <article className={`glass-panel border-app hover:border-app-strong h-full rounded-2xl overflow-hidden flex flex-col group`}>
+                  <div className="relative h-28 overflow-hidden border-b border-app-soft">
+                    <img
+                      src={post.imageUrl}
+                      alt={post.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--app-bg-card)] via-transparent to-transparent" />
+                    <span className="absolute top-2 left-2 text-base" aria-hidden="true">{post.icon}</span>
+                  </div>
+
+                  <div className="p-4 flex-1 flex flex-col">
+                    <div className="flex items-center justify-between text-[9px] font-mono text-app-subtle mb-2">
+                      <span className={`${preset.textColor} ${preset.bgSoft} px-2 py-0.5 border ${preset.borderSoft} rounded-md uppercase tracking-wider`}>
+                        {post.category}
+                      </span>
                       <span>{post.readTime}</span>
                     </div>
 
-                    <h3 className={`text-xs sm:text-sm font-extrabold text-app-heading uppercase tracking-tight group-hover:${preset.textColor} transition-colors leading-snug font-mono`}>
+                    <h3 className="text-xs sm:text-sm font-extrabold text-app-heading uppercase tracking-tight leading-snug font-mono mb-2">
                       {post.title}
                     </h3>
 
-                    <p className="text-[11px] text-app-muted line-clamp-3 leading-relaxed font-mono">
+                    <p className="text-[10px] text-app-muted line-clamp-2 leading-relaxed font-mono flex-1">
                       {post.summary}
                     </p>
-                  </div>
 
-                  <div className="border-t border-app-soft pt-4 mt-6 flex items-center justify-between">
-                    <span className="text-[9px] font-mono text-app-subtle">{post.date}</span>
-                    
-                    <button
-                      onClick={() => {
-                        setFormState("info");
-                        setFormFeedback([post.title.toUpperCase(),`Category: ${post.category} | ${post.date}`, post.content]);
-                      }}
-                      onMouseEnter={() => setIsHovered(true)}
-                      onMouseLeave={() => setIsHovered(false)}
-                      className={`text-[10px] font-mono font-bold ${preset.textColor} hover:text-app-heading transition-colors flex items-center gap-1 uppercase cursor-pointer`}
-                    >
-                      Inspect Module_ <BookOpen className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="border-t border-app-soft pt-3 mt-4 flex items-center justify-between">
+                      <span className="text-[9px] font-mono text-app-subtle">{post.date}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedInsight(post)}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        className={`text-[10px] font-mono font-bold ${preset.textColor} hover:text-app-heading transition-colors flex items-center gap-1 uppercase cursor-pointer`}
+                      >
+                        Inspect Module_ <BookOpen className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-
-                </div>
+                </article>
               </TiltCard>
             ))}
-          </div>
+          </GlassScrollRail>
         </section>
+
+        {/* Project insight popup */}
+        <AnimatePresence>
+          {selectedInsight && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-app-overlay backdrop-blur-md z-[60] flex items-center justify-center p-4 sm:p-6"
+              onClick={() => setSelectedInsight(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.92, y: 24 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.92, y: 24 }}
+                transition={{ type: "spring", damping: 26, stiffness: 320 }}
+                className="w-full max-w-lg max-h-[90vh] overflow-y-auto glass-panel border border-app rounded-2xl shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative h-40 sm:h-44 overflow-hidden rounded-t-2xl">
+                  <img
+                    src={selectedInsight.imageUrl}
+                    alt={selectedInsight.title}
+                    className="w-full h-full object-cover object-top"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--app-bg-card)] via-[var(--app-bg-card)]/40 to-transparent" />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInsight(null)}
+                    className="absolute top-3 right-3 p-2 rounded-full bg-app-overlay/90 border border-app text-app-heading hover:bg-app-surface-hover transition-colors"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <span className="text-2xl mb-1 block" aria-hidden="true">{selectedInsight.icon}</span>
+                    <h3 className="text-lg font-bold text-app-heading font-mono uppercase tracking-tight">
+                      {selectedInsight.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="p-5 sm:p-6 space-y-4">
+                  <div className="flex flex-wrap gap-2 text-[9px] font-mono">
+                    <span className={`${preset.textColor} ${preset.bgSoft} border ${preset.borderSoft} px-2 py-0.5 rounded-md uppercase`}>
+                      {selectedInsight.category}
+                    </span>
+                    <span className="text-app-subtle border border-app-soft px-2 py-0.5 rounded-md">
+                      {selectedInsight.date}
+                    </span>
+                  </div>
+
+                  <p className={`text-[10px] font-mono ${preset.textColor} uppercase tracking-wider`}>
+                    {selectedInsight.stack}
+                  </p>
+
+                  <p className="text-xs text-app-muted font-mono leading-relaxed">
+                    {selectedInsight.summary}
+                  </p>
+
+                  <div className="space-y-3 font-mono">
+                    <div className="bg-app-input border border-app-soft rounded-xl p-4">
+                      <div className={`text-[10px] ${preset.textColor} uppercase tracking-widest mb-2`}>
+                        The problem
+                      </div>
+                      <p className="text-[11px] text-app-secondary leading-relaxed">
+                        {selectedInsight.problem}
+                      </p>
+                    </div>
+                    <div className="bg-app-input border border-app-soft rounded-xl p-4">
+                      <div className={`text-[10px] ${preset.textColor} uppercase tracking-widest mb-2`}>
+                        What I built
+                      </div>
+                      <p className="text-[11px] text-app-secondary leading-relaxed">
+                        {selectedInsight.solution}
+                      </p>
+                    </div>
+                    <div className="bg-app-input border border-app-soft rounded-xl p-4">
+                      <div className={`text-[10px] ${preset.textColor} uppercase tracking-widest mb-2`}>
+                        What I learned
+                      </div>
+                      <p className="text-[11px] text-app-secondary leading-relaxed">
+                        {selectedInsight.learning}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] font-mono text-app-subtle uppercase tracking-wider mb-2">
+                      Architecture nodes
+                    </div>
+                    <ul className="space-y-1.5">
+                      {selectedInsight.highlights.map((item) => (
+                        <li
+                          key={item}
+                          className="text-[10px] font-mono text-app-secondary flex items-start gap-2"
+                        >
+                          <span className={`${preset.textColor} mt-0.5`}>▸</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <a
+                      href={selectedInsight.liveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="project-link-btn project-link-btn--live flex-1"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Live Demo
+                    </a>
+                    <a
+                      href={selectedInsight.githubUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="project-link-btn project-link-btn--github flex-1"
+                    >
+                      <Github className="w-3.5 h-3.5" /> GitHub
+                    </a>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInsight(null)}
+                    className="w-full py-2.5 bg-app-surface hover:bg-app-surface-hover border border-app rounded-xl font-mono text-xs text-app-secondary hover:text-app-heading transition-colors uppercase tracking-wider"
+                  >
+                    Close dossier
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* SECURE SUBMISSION CONTACT GATE */}
         <section id="contact" className="grid grid-cols-1 lg:grid-cols-12 gap-12 bg-app-input rounded-3xl border border-app p-6 sm:p-10 relative overflow-hidden backdrop-blur-md">
@@ -1291,12 +1458,15 @@ export default function App() {
           {/* Left panel headers */}
           <div className="lg:col-span-5 space-y-6">
             <div className="space-y-2">
-              <span className={`text-[10px] font-mono font-black ${preset.textColor} uppercase tracking-widest block`}>05 // Secure Pipeline</span>
+              <span className={`text-[10px] font-mono font-black ${preset.textColor} uppercase tracking-widest block`}>05 // Get In Touch</span>
               <h2 className="text-2xl sm:text-3xl font-black text-app-heading tracking-tight uppercase leading-snug">
-                Deploy A Message
+                Let&apos;s Work Together
               </h2>
               <p className="text-app-muted text-xs sm:text-sm leading-relaxed font-mono">
-                Initiate a custom message telemetry envelope. Secure key encryption will apply automatically.
+                Open to junior full-stack roles, freelance projects, and collaborations. Based in East London—happy to discuss remote or hybrid opportunities.
+              </p>
+              <p className="text-[11px] text-app-subtle font-mono leading-relaxed border-l-2 border-app pl-3">
+                I build production-style apps with React, TypeScript, Node, and PostgreSQL. Recent work includes EduTrack, Envault CLI, and a Fastify job-board backend—all live on Cloud Run.
               </p>
             </div>
 
@@ -1402,7 +1572,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Client Name</label>
+                  <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Your Name</label>
                   <input
                     type="text"
                     value={name}
@@ -1413,7 +1583,7 @@ export default function App() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Sender Email</label>
+                  <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Your Email</label>
                   <input
                     type="email"
                     value={email}
@@ -1426,11 +1596,11 @@ export default function App() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Project Subject</label>
+                <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Subject</label>
                 <input
                   type="text"
                   value={subject}
-                  placeholder="Full-Stack Proposal"
+                  placeholder="Junior Developer Role / Freelance Project"
                   onChange={(e) => setSubject(e.target.value)}
                   className={`w-full bg-app-input border border-app focus:border-${preset.id === "cyan" ? "sky" : preset.id === "violet" ? "purple" : preset.id === "emerald" ? "emerald" : "amber"}-500 rounded-xl px-4 py-3 text-xs text-app-heading placeholder:text-app-subtle focus:outline-none focus:ring-1 focus:ring-${preset.id === "cyan" ? "sky" : preset.id === "violet" ? "purple" : preset.id === "emerald" ? "emerald" : "amber"}-500 transition-all font-mono`}
                 />
@@ -1438,7 +1608,7 @@ export default function App() {
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Message Telemetry Payload</label>
+                  <label className="text-[10px] font-mono text-app-muted uppercase tracking-wider block">Message</label>
                   <span className={`text-[9px] font-mono ${message.length > 500 ? "text-red-400" : "text-app-subtle"}`}>
                     {message.length} / 600 characters max
                   </span>
@@ -1448,7 +1618,7 @@ export default function App() {
                   value={message}
                   maxLength={600}
                   required
-                  placeholder="Describe the details of your proposal scope..."
+                  placeholder="Hi Myat, I saw your EduTrack and Job Board API projects. I'd like to discuss a role or project..."
                   onChange={(e) => setMessage(e.target.value)}
                   className={`w-full bg-app-input border border-app focus:border-${preset.id === "cyan" ? "sky" : preset.id === "violet" ? "purple" : preset.id === "emerald" ? "emerald" : "amber"}-500 rounded-xl px-4 py-3 text-xs text-app-heading placeholder:text-app-subtle focus:outline-none focus:ring-1 focus:ring-${preset.id === "cyan" ? "sky" : preset.id === "violet" ? "purple" : preset.id === "emerald" ? "emerald" : "amber"}-500 transition-all font-mono resize-none`}
                 />

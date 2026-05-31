@@ -32,6 +32,11 @@
   --app-nav-bg: rgba(5, 5, 5, 0.7);
   --app-scrollbar-track: #050505;
   --app-scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --app-scroll-rail: rgba(255, 255, 255, 0.04);
+  --app-scroll-rail-border: rgba(255, 255, 255, 0.08);
+  --app-scroll-thumb: rgba(255, 255, 255, 0.35);
+  --app-scroll-thumb-hover: rgba(255, 255, 255, 0.55);
+  --app-scroll-thumb-glow: rgba(14, 165, 233, 0.45);
   --app-grid-line: rgba(255, 255, 255, 0.012);
   --app-ambient-cyan: rgba(22, 78, 99, 0.2);
   --app-ambient-purple: rgba(88, 28, 135, 0.2);
@@ -70,6 +75,11 @@
   --app-nav-bg: rgba(255, 255, 255, 0.82);
   --app-scrollbar-track: #f1f5f9;
   --app-scrollbar-thumb: rgba(15, 23, 42, 0.15);
+  --app-scroll-rail: rgba(15, 23, 42, 0.06);
+  --app-scroll-rail-border: rgba(15, 23, 42, 0.1);
+  --app-scroll-thumb: rgba(15, 23, 42, 0.28);
+  --app-scroll-thumb-hover: rgba(15, 23, 42, 0.45);
+  --app-scroll-thumb-glow: rgba(14, 165, 233, 0.35);
   --app-grid-line: rgba(15, 23, 42, 0.06);
   --app-ambient-cyan: rgba(14, 165, 233, 0.12);
   --app-ambient-purple: rgba(168, 85, 247, 0.1);
@@ -320,4 +330,287 @@ ul {
   color: var(--app-heading);
   background: var(--app-surface-hover);
   border-color: var(--app-border-strong);
+}
+
+/* ─── Glass dynamic scroll rail (Selected Work, Insights) ─── */
+.glass-scroll-rail {
+  position: relative;
+  border-radius: 1.25rem;
+  padding: 1rem 1rem 0.875rem;
+  background: var(--app-glass-bg);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--app-glass-border);
+  box-shadow:
+    var(--app-glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  transition:
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+[data-theme="light"] .glass-scroll-rail {
+  box-shadow:
+    var(--app-glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.glass-scroll-rail:hover {
+  border-color: var(--app-glass-border-hover);
+  box-shadow:
+    var(--app-glass-shadow),
+    0 0 48px -12px var(--scroll-accent-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-scroll-rail__ambient {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--scroll-progress, 0) * 100%);
+  width: min(280px, 55%);
+  height: 120px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    var(--scroll-accent-soft) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+  transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: blur(8px);
+}
+
+.glass-scroll-rail__fade {
+  position: absolute;
+  top: 0;
+  bottom: 3.5rem;
+  width: 3rem;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.glass-scroll-rail__fade--left {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--app-glass-bg) 92%, var(--app-bg)) 0%,
+    transparent 100%
+  );
+}
+
+.glass-scroll-rail__fade--right {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--app-glass-bg) 92%, var(--app-bg)) 0%,
+    transparent 100%
+  );
+}
+
+.glass-scroll-rail__track {
+  position: relative;
+  z-index: 1;
+}
+
+.horizontal-scroll-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.5rem;
+  padding-block: 0.35rem 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.horizontal-scroll-track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .horizontal-scroll-track {
+    gap: 2rem;
+  }
+
+  .glass-scroll-rail {
+    padding: 1.25rem 1.25rem 1rem;
+    border-radius: 1.5rem;
+  }
+}
+
+.glass-scroll-rail__dock {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--app-border-soft);
+}
+
+.glass-scroll-rail__nav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  color: var(--app-muted);
+  background: var(--app-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--app-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+  cursor: pointer;
+}
+
+.glass-scroll-rail__nav:hover:not(:disabled) {
+  color: var(--scroll-accent);
+  border-color: color-mix(in srgb, var(--scroll-accent) 40%, transparent);
+  background: var(--scroll-accent-soft);
+  box-shadow:
+    0 0 20px var(--scroll-accent-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.glass-scroll-rail__nav:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.glass-scroll-rail__nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.glass-scroll-rail__slider {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.glass-scroll-rail__slider-track {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--app-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--app-glass-border);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+[data-theme="light"] .glass-scroll-rail__slider-track {
+  box-shadow:
+    inset 0 2px 4px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-scroll-rail__slider-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--scroll-accent-glow) 0%,
+    var(--scroll-accent) 55%,
+    color-mix(in srgb, var(--scroll-accent) 70%, #fff) 100%
+  );
+  box-shadow:
+    0 0 16px var(--scroll-accent-glow),
+    0 0 4px var(--scroll-accent-soft);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-scroll-rail__slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 1rem;
+  height: 1rem;
+  margin-top: -0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    var(--scroll-accent) 100%
+  );
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 0 14px var(--scroll-accent-glow),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.glass-scroll-rail__slider-shine {
+  position: absolute;
+  inset: 0.35rem 0.5rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: glass-scroll-shine 3s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+@keyframes glass-scroll-shine {
+  0%,
+  100% {
+    background-position: 200% 0;
+  }
+  50% {
+    background-position: -200% 0;
+  }
+}
+
+.horizontal-scroll-track > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.horizontal-scroll-card {
+  width: min(85vw, 360px);
+}
+
+@media (min-width: 768px) {
+  .horizontal-scroll-card {
+    width: min(42vw, 380px);
+  }
+}
+
+.horizontal-scroll-card--wide {
+  width: min(88vw, 400px);
+}
+
+@media (min-width: 768px) {
+  .horizontal-scroll-card--wide {
+    width: min(45vw, 420px);
+  }
 }
